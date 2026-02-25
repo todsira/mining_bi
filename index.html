@@ -465,46 +465,6 @@ tr:hover td { background: rgba(14,165,233,0.03); }
   background: var(--accent-glow);
 }
 
-/* ===== DEPLOY SECTION ===== */
-.code-block {
-  background: #0d1117;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: #c9d1d9;
-  overflow-x: auto;
-  margin: 12px 0;
-  line-height: 1.6;
-}
-.deploy-step {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 16px;
-}
-.deploy-step h4 {
-  font-size: 0.95rem;
-  color: var(--accent);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.step-num {
-  background: var(--accent);
-  color: var(--bg-primary);
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .header-inner { height: 56px; }
@@ -548,7 +508,6 @@ tr:hover td { background: rgba(14,165,233,0.03); }
       <button class="nav-btn" onclick="showSection('sites')">All Sites</button>
       <button class="nav-btn" onclick="showSection('top20')">Top 20</button>
       <button class="nav-btn" onclick="showSection('approach')">Approach</button>
-      <button class="nav-btn" onclick="showSection('deploy')">Deploy</button>
     </nav>
   </div>
 </header>
@@ -640,61 +599,13 @@ tr:hover td { background: rgba(14,165,233,0.03); }
   <div id="approach-content"></div>
 </div>
 
-<!-- ===== DEPLOY ===== -->
-<div id="sec-deploy" class="section">
-  <h2>Deployment Guide</h2>
-  <p class="section-subtitle">Deploy this webapp to GitHub Pages</p>
-
-  <div class="deploy-step">
-    <h4><span class="step-num">1</span> Create a GitHub Repository</h4>
-    <p style="font-size:0.85rem;color:var(--text-secondary)">Go to <a href="https://github.com/new" target="_blank" style="color:var(--accent)">github.com/new</a> and create a new repository (e.g., <code>quarry-scope</code>). Set it to Public.</p>
-  </div>
-
-  <div class="deploy-step">
-    <h4><span class="step-num">2</span> Upload Files</h4>
-    <p style="font-size:0.85rem;color:var(--text-secondary)">Upload this <code>index.html</code> file to the root of your repo. You can drag-and-drop directly on the GitHub web interface or use Git CLI:</p>
-    <div class="code-block">git init
-git add index.html
-git commit -m "Initial commit - QuarryScope BI"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/quarry-scope.git
-git push -u origin main</div>
-  </div>
-
-  <div class="deploy-step">
-    <h4><span class="step-num">3</span> Enable GitHub Pages</h4>
-    <p style="font-size:0.85rem;color:var(--text-secondary)">Go to <strong>Settings → Pages</strong> in your repository. Under "Source", select <strong>Deploy from a branch</strong>, choose <strong>main</strong> branch, folder <strong>/ (root)</strong>, then click <strong>Save</strong>.</p>
-  </div>
-
-  <div class="deploy-step">
-    <h4><span class="step-num">4</span> Access Your Site</h4>
-    <p style="font-size:0.85rem;color:var(--text-secondary)">After a few minutes, your site will be live at:</p>
-    <div class="code-block">https://YOUR_USERNAME.github.io/quarry-scope/</div>
-    <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px">You can also use a custom domain by adding a CNAME file.</p>
-  </div>
-
-  <div class="deploy-step">
-    <h4><span class="step-num">5</span> Alternative: Netlify Drop</h4>
-    <p style="font-size:0.85rem;color:var(--text-secondary)">For instant deployment, drag the <code>index.html</code> file to <a href="https://app.netlify.com/drop" target="_blank" style="color:var(--accent)">app.netlify.com/drop</a> — no account required for a temporary site.</p>
-  </div>
-</div>
-
 <!-- ===== DETAIL OVERLAY ===== -->
 <div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
   <div class="detail-panel" id="detail-panel"></div>
 </div>
 
 <script>
-// ============================================================
-// REAL-WORLD DATA — Quarries, Crushing Plants, Mineral Processing Sites
-// Within ~250 km road radius of Saraburi (14.5286, 100.9114)
-// Data sourced from: DPIM Thailand, USGS Minerals Yearbooks, 
-// SET filings, company websites, industry reports, 
-// Thai Yellow Pages, and verified public databases
-// ============================================================
-
 const SITES = [
-  // === SARABURI PROVINCE ===
   {id:1,name:"SCG Kaeng Khoi Cement Plant",thai:"โรงงานปูนซิเมนต์ไทย แก่งคอย",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5867,lng:100.9983,output:"7.30 mmtpa",outputNum:7.3,owner:"Siam Cement Group (SCG)",notes:"Thailand's largest cement producer. Five production lines at Kaeng Khoi. Major consumer of limestone aggregates.",machines:"Multiple rotary kilns, vertical roller mills, ball mills",problems:"High energy costs driving shift to alternative fuels; CO2 reduction mandates",phone:"036-389-000",established:1969},
   {id:2,name:"INSEE (Siam City Cement) Saraburi Plant",thai:"โรงงานปูนอินทรี สระบุรี",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5742,lng:100.9856,output:"14.78 mmtpa",outputNum:14.78,owner:"Siam City Cement PCL (SCCC)",notes:"Operates under INSEE brand. Three independent cement plants at Saraburi with two lines each. Also runs INSEE Aggregates quarries.",machines:"Six production lines, preheater towers, clinker coolers",problems:"Margin erosion from input costs; phasing out OPC by 2025 target",phone:"036-389-100",established:1972},
   {id:3,name:"TPI Polene Cement Plant",thai:"โรงงานปูนทีพีไอ โพลีน",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5550,lng:101.0200,output:"13.50 mmtpa",outputNum:13.5,owner:"TPI Polene PCL",notes:"Largest single-site cement plant in Thailand. Four production lines. Also operates waste-to-energy power plants on-site.",machines:"Four kiln lines, vertical roller mills, 150 MW coal/RDF power plant",problems:"Community opposition to coal plant; transitioning to coal-free by 2026; high input costs",phone:"036-247-500",established:1988},
@@ -716,27 +627,20 @@ const SITES = [
   {id:19,name:"Tongkah Harbour Andesite Quarry",thai:"เหมืองหินทองคา ฮาร์เบอร์",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine & Crushing Plant",material:"andesite",lat:14.5900,lng:100.9600,output:"0.80 mmtpa",outputNum:0.8,owner:"Tongkah Harbour PCL",notes:"Andesite quarry with ~17 million ton reserves. Produces railway ballast, well-grade 3/4\" and 3/8\" aggregate, and road base stone.",machines:"Drilling/blasting, primary jaw crusher, rough and fine grinding, screening machines",problems:"Niche product (railway ballast) market cyclicality; transitioning from tin mining legacy",phone:"036-xxx-xxx",established:2000},
   {id:20,name:"Mineral Connext Pyrophyllite Mine",thai:"เหมืองไพโรฟิลไลต์ เขาไม้นวล",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine",material:"lime",lat:14.5650,lng:100.9550,output:"0.03 mmtpa",outputNum:0.03,owner:"Mineral Connext Group",notes:"Pyrophyllite mine for white cement and ceramics industry. 4 grades, reserves >2.2 million tonnes, 50+ year mine life.",machines:"Mining equipment, mineral processing plant",problems:"Niche market; quality consistency across grades",phone:"-",established:1995},
   {id:21,name:"Golden Lime PCL Saraburi",thai:"โกลเด้น ไลม์ สระบุรี",province:"Saraburi",district:"Kaeng Khoi",type:"Lime Plant",material:"lime",lat:14.5680,lng:100.9800,output:"0.40 mmtpa",outputNum:0.4,owner:"Golden Lime PCL",notes:"Lime and limestone producer for industrial applications.",machines:"Lime kilns, crushing equipment",problems:"Competition from Chememan's scale; energy costs for calcination",phone:"-",established:1990},
-  // === LOPBURI PROVINCE ===
   {id:22,name:"Namheng Steel Mill",thai:"โรงงานเหล็ก น่ำเฮง ลพบุรี",province:"Lopburi",district:"Mueang Lopburi",type:"Steel/Mineral Processing",material:"sand",lat:14.7990,lng:100.6540,output:"0.30 mmtpa",outputNum:0.3,owner:"Namheng Steel Co., Ltd.",notes:"Steel rebar producer. Consumes construction aggregates for plant operations and surrounding construction.",machines:"Electric arc furnace, rolling mill",problems:"Raw material sourcing; energy costs; competition from imports",phone:"-",established:1985},
   {id:23,name:"Sila Lopburi Quarry",thai:"โรงโม่หิน ศิลาลพบุรี",province:"Lopburi",district:"Khok Samrong",type:"Crushing Plant",material:"limestone",lat:14.9800,lng:100.8500,output:"0.45 mmtpa",outputNum:0.45,owner:"Sila Lopburi Co., Ltd.",notes:"Regional quarry serving Lopburi-area construction. Road-accessible to Highway 1.",machines:"Jaw and cone crushers, screening plant",problems:"Lower demand density vs Saraburi; transportation radius limits",phone:"-",established:1998},
   {id:24,name:"Phatthana Silalop Quarry",thai:"โรงโม่หิน พัฒนาศิลาลพ",province:"Lopburi",district:"Chai Badan",type:"Crushing Plant",material:"limestone",lat:15.1800,lng:101.0500,output:"0.35 mmtpa",outputNum:0.35,owner:"Phatthana Silalop Co., Ltd.",notes:"Located in Chai Badan district. Serves eastern Lopburi construction market.",machines:"Primary and secondary crushers",problems:"Remote location increases logistics costs; seasonal demand fluctuation",phone:"-",established:2001},
-  // === NAKHON RATCHASIMA PROVINCE ===
   {id:25,name:"Sumukee Cement Grinding Works",thai:"โรงงานบดปูน สมุยคี นครราชสีมา",province:"Nakhon Ratchasima",district:"Mueang",type:"Cement Grinding",material:"cement",lat:14.9750,lng:102.0900,output:"0.12 mmtpa",outputNum:0.12,owner:"Sumukee Cement Co., Ltd.",notes:"Small grinding works. Clinker sourced from Saraburi plants.",machines:"Cement ball mill, storage silos, bagging line",problems:"Clinker transport costs; limited production scale",phone:"-",established:1995},
   {id:26,name:"Pimai Salt Mine",thai:"เหมืองเกลือพิมาย",province:"Nakhon Ratchasima",district:"Pimai",type:"Mining & Processing",material:"sand",lat:15.2200,lng:102.6400,output:"1.50 mmtpa",outputNum:1.5,owner:"Pimai Salt Co., Ltd.",notes:"Rock salt mining. While not direct aggregates, indicates mining activity and infrastructure in area.",machines:"Underground mining equipment, processing plant",problems:"Environmental concerns with brine discharge; market price volatility",phone:"-",established:1980},
   {id:27,name:"Sila Tung Arun Quarry",thai:"โรงโม่หิน ศิลาทุ่งอรุณ",province:"Nakhon Ratchasima",district:"Chok Chai",type:"Crushing Plant",material:"limestone",lat:14.7300,lng:102.1700,output:"0.50 mmtpa",outputNum:0.5,owner:"Sila Tung Arun Co., Ltd.",notes:"Services Nakhon Ratchasima construction. Sells aggregate, crushed rock, and sand.",machines:"Jaw crushers, equipment rental (backhoes)",problems:"Competitive market in Korat; equipment utilization rates; logistics",phone:"-",established:1999},
   {id:28,name:"Singh Group Quarry Korat",thai:"เหมืองหิน ซิงห์ กรุ๊ป โคราช",province:"Nakhon Ratchasima",district:"Sung Noen",type:"Open Pit Mine & Crushing Plant",material:"limestone",lat:14.8900,lng:101.8200,output:"0.85 mmtpa",outputNum:0.85,owner:"Singh Group Co., Ltd.",notes:"Limestone quarry at Sung Noen, strategic location on Mittraphap Road corridor between Saraburi and Korat.",machines:"Drilling, blasting, jaw and cone crushers, screening plant",problems:"High transport costs on Mittraphap road; need to optimize fleet logistics",phone:"-",established:1996},
-  // === NAKHON SAWAN PROVINCE ===
   {id:29,name:"Jalaprathan Cement Takli Plant",thai:"โรงงานปูนชลประทาน ตาคลี",province:"Nakhon Sawan",district:"Takli",type:"Cement Plant",material:"cement",lat:15.2600,lng:100.3400,output:"1.17 mmtpa",outputNum:1.17,owner:"Jalaprathan Cement PCL (Heidelberg Materials 35%)",notes:"Thailand's first cement plant in the north (est. 1958). Two limestone quarries near plant.",machines:"Two rotary kilns, preheater towers, dry process",problems:"Aging infrastructure; distance from Bangkok market; energy cost pressure",phone:"056-262-000",established:1958},
-  // === PHRA NAKHON SI AYUTTHAYA ===
   {id:30,name:"Ayudhya Quarry (INSEE)",thai:"เหมืองหินอยุธยา (อินทรี)",province:"Ayutthaya",district:"various",type:"Open Pit Mine",material:"limestone",lat:14.3500,lng:100.5700,output:"0.80 mmtpa",outputNum:0.8,owner:"Siam City Cement PCL",notes:"Fifth-largest mine in Thailand (2021). Feeds INSEE products. Strategic location near industrial zones.",machines:"Drilling/blasting, primary crushing, conveyor systems",problems:"Urban encroachment on quarry boundaries; environmental monitoring requirements",phone:"-",established:1980},
-  // === SUPHAN BURI ===
   {id:31,name:"Suphanburi Quarry (INSEE)",thai:"เหมืองหินสุพรรณบุรี (อินทรี)",province:"Suphan Buri",district:"various",type:"Open Pit Mine",material:"limestone",lat:14.4700,lng:100.1200,output:"1.99 mmtpa",outputNum:1.99,owner:"Siam City Cement PCL",notes:"Fourth-largest mine in Thailand. Critical limestone supply for INSEE operations.",machines:"Full mining fleet, primary crusher station",problems:"Community relations; long haul distance to some customers",phone:"-",established:1982},
-  // === KANCHANABURI ===
   {id:32,name:"Sahasilapermpool Quarry",thai:"โรงโม่หินสหศิลาเพิ่มพูน",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7090,lng:100.8710,output:"1.00 mmtpa",outputNum:1.0,owner:"Sahasilapermpool Co., Ltd.",notes:"Drill & blast quarry operations with 100,000-150,000 TPM capacity. Referenced by Mining Corp as client.",machines:"Hydraulic drills, blast equipment, jaw and cone crushers",problems:"Maintaining blast efficiency; community noise complaints; wear part costs",phone:"-",established:1988},
   {id:33,name:"Sila Raks Quarry",thai:"ศิลารักษ์ โรงโม่หิน",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7050,lng:100.8720,output:"0.45 mmtpa",outputNum:0.45,owner:"Sila Raks Co., Ltd.",notes:"Part of the Na Phra Lan quarry cluster. Standard construction aggregates production.",machines:"Crushing and screening line",problems:"Market share defense in saturated cluster; product pricing pressure",phone:"-",established:1994},
   {id:34,name:"Sila Sin Sap Co., Ltd.",thai:"ศิลาสินทรัพย์",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7010,lng:100.8650,output:"0.55 mmtpa",outputNum:0.55,owner:"Sila Sin Sap Co., Ltd.",notes:"Aggregate producer in Na Phra Lan area. Multi-product stone output.",machines:"Standard crushing plant",problems:"Aging equipment; need for process automation; dust compliance",phone:"-",established:1991},
   {id:35,name:"Thai Pipat Partnership",thai:"ห้างหุ้นส่วนจำกัด ไทพิพัฒน์",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7000,lng:100.8630,output:"0.40 mmtpa",outputNum:0.4,owner:"Thai Pipat Partnership",notes:"Partnership-structured quarry operation in the cluster area.",machines:"Basic crushing and screening",problems:"Limited partnership capital for equipment investment; competitive disadvantage",phone:"-",established:1997},
-  // === ADDITIONAL NOTABLE SITES ===
   {id:36,name:"Stone One PCL - Bang Phra Quarry",thai:"สโตนวัน มหาชน - เหมืองบางพระ",province:"Chonburi",district:"Si Racha",type:"Open Pit Mine & Crushing Plant",material:"granite",lat:13.2230,lng:100.9960,output:"1.20 mmtpa",outputNum:1.2,owner:"Stone One PCL (SET listed)",notes:"Granite and limestone quarry. Listed company with concessions nationwide. Also has dolomite mine in Ratchaburi.",machines:"Full mining & crushing plant, fleet management",problems:"Product diversification into dolomite; logistics optimization across sites",phone:"038-341-900",established:1996},
   {id:37,name:"Pands Group Sand Mining",thai:"แพนด์ส กรุ๊ป เหมืองทราย",province:"Ayutthaya",district:"various",type:"Sand Mining & Processing",material:"sand",lat:14.3600,lng:100.5500,output:"0.12 mmtpa",outputNum:0.12,owner:"Pands Group Mining & Milling Co., Ltd.",notes:"Industrial sand quarry in Ayutthaya. Supplies glass and construction industries.",machines:"Dredging equipment, sand washing, screening",problems:"Environmental restrictions on sand mining; dwindling accessible deposits",phone:"-",established:2000},
   {id:38,name:"Tata Steel Manufacturing Saraburi",thai:"ทาทา สตีล สระบุรี",province:"Saraburi",district:"Ban Mo",type:"Steel Mill",material:"sand",lat:14.5200,lng:100.7800,output:"0.60 mmtpa",outputNum:0.6,owner:"Tata Steel Manufacturing (Thailand) PCL",notes:"Merged subsidiary (Siam Iron & Steel). Consumes limestone flux and construction aggregates.",machines:"Electric arc furnace, steel rolling mill",problems:"Overcapacity in Thai steel market; raw material import dependency",phone:"-",established:1996},
@@ -749,9 +653,6 @@ const SITES = [
   {id:45,name:"SCG Khao Wong Cement Plant",thai:"โรงงานปูน SCG เขาวง",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5500,lng:101.0500,output:"3.84 mmtpa",outputNum:3.84,owner:"Siam Cement Group",notes:"Part of the SCG Saraburi complex. Significant production capacity.",machines:"Kiln lines, raw mills, cement mills",problems:"Transition to low-carbon cements; alternative fuel sourcing",phone:"-",established:1982},
 ];
 
-// ============================================================
-// BUSINESS FEASIBILITY SCORING ENGINE
-// ============================================================
 const FACTORS = [
   {name:"Proximity (Road Distance)", weight:0.15, desc:"Closer sites = lower logistics cost for your sales/service team"},
   {name:"Production Volume", weight:0.12, desc:"Higher output = higher equipment/aggregate consumption"},
@@ -769,7 +670,6 @@ const FACTORS = [
 
 function scoreFactors(site) {
   const s = {};
-  // Proximity (inverse of distance from Saraburi center ~14.5286, 100.9114)
   const dist = Math.sqrt(Math.pow(site.lat-14.5286,2)+Math.pow(site.lng-100.9114,2))*111;
   s["Proximity (Road Distance)"] = Math.max(0, Math.min(10, 10 - dist/30));
   s["Production Volume"] = Math.min(10, (site.outputNum/2)*10);
@@ -792,18 +692,13 @@ function computeOverall(factors) {
   return Math.round(total * 10) / 10;
 }
 
-// Compute scores for all sites
 SITES.forEach(s => {
   s.factors = scoreFactors(s);
   s.score = computeOverall(s.factors);
 });
 
-// Sort by score for top 20
 const TOP20 = [...SITES].sort((a,b) => b.score - a.score).slice(0, 20);
 
-// ============================================================
-// BUSINESS APPROACH GENERATOR
-// ============================================================
 function generateApproach(site) {
   const approaches = {
     "Cement Plant": {
@@ -871,10 +766,6 @@ function generateApproach(site) {
   return approaches[typeKey] || approaches.default;
 }
 
-// ============================================================
-// UI RENDERING
-// ============================================================
-
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -883,7 +774,6 @@ function showSection(id) {
   if (id === 'map') setTimeout(initMap, 100);
 }
 
-// Dashboard
 function renderDashboard() {
   const provinces = {};
   const materials = {};
@@ -902,7 +792,6 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-label">Crushing Plants</div><div class="stat-value">${SITES.filter(s=>s.type.includes('Crushing')).length}</div><div class="stat-sub">Equipment wear part buyers</div></div>
   `;
 
-  // Province chart
   const sortedProv = Object.entries(provinces).sort((a,b) => b[1]-a[1]);
   const maxProv = sortedProv[0][1];
   document.getElementById('chart-province').innerHTML = sortedProv.map(([p,c]) => `
@@ -912,7 +801,6 @@ function renderDashboard() {
     </div>
   `).join('');
 
-  // Material donut
   const matColors = {cement:'#10b981',limestone:'#0ea5e9',lime:'#f59e0b',granite:'#a78bfa',sand:'#fb923c',andesite:'#f472b6'};
   const matEntries = Object.entries(materials).sort((a,b)=>b[1]-a[1]);
   const total = SITES.length;
@@ -940,7 +828,6 @@ function renderDashboard() {
     `).join('')}</div>
   `;
 
-  // Output chart
   const topOutput = [...SITES].sort((a,b) => b.outputNum - a.outputNum).slice(0,8);
   const maxOut = topOutput[0].outputNum;
   document.getElementById('chart-output').innerHTML = topOutput.map(s => `
@@ -950,7 +837,6 @@ function renderDashboard() {
     </div>
   `).join('');
 
-  // Feasibility distribution
   const ranges = {'9-10':0,'8-9':0,'7-8':0,'6-7':0,'5-6':0,'<5':0};
   SITES.forEach(s => {
     if(s.score>=9) ranges['9-10']++;
@@ -976,7 +862,6 @@ function polarToCart(cx,cy,r,angleDeg) {
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-// Map
 let map, markers = [], markerLayer;
 function initMap() {
   if (map) { map.invalidateSize(); return; }
@@ -986,10 +871,7 @@ function initMap() {
     maxZoom: 18
   }).addTo(map);
 
-  // Add center marker
   L.circleMarker([14.5286, 100.9114], {radius:10, color:'#ef4444', fillColor:'#ef4444', fillOpacity:0.8, weight:2}).addTo(map).bindPopup('<b>Your HQ — Saraburi</b>');
-
-  // 250km radius circle (approximate)
   L.circle([14.5286, 100.9114], {radius:250000, color:'rgba(14,165,233,0.3)', fillColor:'rgba(14,165,233,0.05)', weight:1}).addTo(map);
 
   markerLayer = L.layerGroup().addTo(map);
@@ -1033,7 +915,6 @@ function filterMap(type, el) {
   addMarkers(type);
 }
 
-// Sites Table
 let tableData = [...SITES];
 function renderTable(data) {
   document.getElementById('site-count').textContent = `${data.length} sites`;
@@ -1079,7 +960,6 @@ function sortTable(col) {
   renderTable(sorted);
 }
 
-// Top 20
 function renderTop20() {
   document.getElementById('top20-grid').innerHTML = TOP20.map((s,i) => {
     const color = s.score >= 8 ? 'var(--success)' : s.score >= 6.5 ? 'var(--accent)' : 'var(--warning)';
@@ -1102,7 +982,6 @@ function renderTop20() {
   }).join('');
 }
 
-// Approach Section
 function renderApproachTabs() {
   document.getElementById('approach-tabs').innerHTML = TOP20.map((s,i) => `
     <button class="approach-tab ${i===0?'active':''}" onclick="showApproach(${s.id}, this)">#${i+1} ${s.name.split(' ').slice(0,3).join(' ')}</button>
@@ -1142,7 +1021,6 @@ function showApproachById(id) {
   `;
 }
 
-// Detail Overlay
 function openDetail(id) {
   const site = SITES.find(s => s.id === id);
   const approach = generateApproach(site);
@@ -1194,9 +1072,6 @@ function closeDetail() {
 
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeDetail(); });
 
-// ============================================================
-// INIT
-// ============================================================
 renderDashboard();
 renderTable(SITES);
 renderTop20();
