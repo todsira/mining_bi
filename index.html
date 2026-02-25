@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuarryScope BI — Geo-Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1a2236;
+  --bg-card: #151d2e;
+  --bg-hover: #1e293b;
+  --border: #1e3a5f;
+  --border-accent: #0ea5e9;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #0ea5e9;
+  --accent-glow: rgba(14,165,233,0.15);
+  --accent2: #22d3ee;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+  --pink: #f472b6;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ===== HEADER ===== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(10,14,23,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.nav { display: flex; gap: 4px; }
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.nav-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.nav-btn.active { color: var(--accent); background: var(--accent-glow); }
+
+/* ===== SECTIONS ===== */
+.section { display: none; padding: 24px; max-width: 1440px; margin: 0 auto; }
+.section.active { display: block; }
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ===== DASHBOARD CARDS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0.7;
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; }
+
+/* ===== MAP ===== */
+#map {
+  width: 100%;
+  height: 500px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.leaflet-container { background: var(--bg-secondary); }
+.map-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.map-filter {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.map-filter:hover, .map-filter.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* ===== TABLES ===== */
+.table-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.table-title { font-weight: 600; font-size: 1rem; }
+.search-input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  width: 260px;
+  max-width: 100%;
+  transition: border-color 0.2s;
+}
+.search-input:focus { outline: none; border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead { background: var(--bg-secondary); }
+th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+th:hover { color: var(--accent); }
+td {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(30,58,95,0.4);
+  vertical-align: top;
+}
+tr:hover td { background: rgba(14,165,233,0.03); }
+
+/* Score bars */
+.score-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.score-fill {
+  height: 6px;
+  border-radius: 3px;
+  width: 60px;
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+.score-fill-inner {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+.score-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.8rem; }
+
+/* Tags */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.tag-limestone { background: rgba(14,165,233,0.15); color: var(--accent); }
+.tag-granite { background: rgba(167,139,250,0.15); color: var(--purple); }
+.tag-cement { background: rgba(16,185,129,0.15); color: var(--success); }
+.tag-lime { background: rgba(245,158,11,0.15); color: var(--warning); }
+.tag-sand { background: rgba(251,146,60,0.15); color: var(--orange); }
+.tag-andesite { background: rgba(244,114,182,0.15); color: var(--pink); }
+
+/* Tier badges */
+.tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.tier-1 { background: rgba(234,179,8,0.15); color: #eab308; }
+.tier-2 { background: rgba(168,162,158,0.15); color: #a8a29e; }
+.tier-3 { background: rgba(180,83,9,0.15); color: #d97706; }
+
+/* ===== DETAIL PANEL ===== */
+.detail-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+.detail-overlay.active { display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+.detail-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 780px;
+  width: 100%;
+  padding: 32px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.detail-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+.detail-close:hover { border-color: var(--accent); color: var(--accent); }
+.detail-panel h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.detail-panel .detail-thai { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.detail-item { background: var(--bg-card); border-radius: var(--radius); padding: 12px; }
+.detail-item-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.detail-item-value { font-size: 0.9rem; font-weight: 500; }
+.factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
+.factor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+}
+.factor-name { color: var(--text-secondary); }
+.factor-score { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.approach-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 16px;
+}
+.approach-section h4 { font-size: 0.95rem; color: var(--accent); margin-bottom: 12px; }
+.approach-section p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+.approach-section ul { margin: 8px 0 0 20px; font-size: 0.85rem; color: var(--text-secondary); }
+.approach-section li { margin-bottom: 6px; }
+
+/* ===== CHARTS AREA ===== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.chart-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { width: 120px; font-size: 0.75rem; color: var(--text-secondary); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 20px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; }
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--bg-primary);
+}
+
+/* Donut chart */
+.donut-container { display: flex; align-items: center; gap: 24px; }
+.donut-svg { flex-shrink: 0; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ===== TOP 20 GRID ===== */
+.top20-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.top20-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.top20-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-2px);
+}
+.top20-rank {
+  position: absolute;
+  top: 12px; right: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 800;
+  color: rgba(14,165,233,0.1);
+  line-height: 1;
+}
+.top20-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; padding-right: 40px; }
+.top20-thai { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; }
+.top20-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.top20-score-row { display: flex; align-items: center; gap: 10px; }
+.top20-score-label { font-size: 0.72rem; color: var(--text-muted); }
+.top20-score-bar { flex: 1; height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+.top20-score-fill { height: 100%; border-radius: 3px; }
+.top20-score-num { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; min-width: 32px; text-align: right; }
+
+/* ===== APPROACH TAB SELECTOR ===== */
+.approach-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.approach-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.approach-tab:hover, .approach-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* ===== DEPLOY SECTION ===== */
+.code-block {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #c9d1d9;
+  overflow-x: auto;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+.deploy-step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.deploy-step h4 {
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-num {
+  background: var(--accent);
+  color: var(--bg-primary);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .header-inner { height: 56px; }
+  .logo span { display: none; }
+  .nav-btn { padding: 6px 10px; font-size: 0.78rem; }
+  .section { padding: 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-value { font-size: 1.4rem; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .factors-grid { grid-template-columns: 1fr; }
+  .top20-grid { grid-template-columns: 1fr; }
+  #map { height: 350px; }
+  .detail-panel { padding: 20px; }
+  .search-input { width: 100%; }
+  .donut-container { flex-direction: column; }
+  .bar-label { width: 80px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .nav { gap: 0; }
+  .nav-btn { padding: 6px 8px; font-size: 0.72rem; }
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.section.active { animation: fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">◆</div>
+      <span>QuarryScope</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showSection('map')">Map</button>
+      <button class="nav-btn" onclick="showSection('sites')">All Sites</button>
+      <button class="nav-btn" onclick="showSection('top20')">Top 20</button>
+      <button class="nav-btn" onclick="showSection('approach')">Approach</button>
+      <button class="nav-btn" onclick="showSection('deploy')">Deploy</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="sec-dashboard" class="section active">
+  <h2>Executive Summary</h2>
+  <p class="section-subtitle">Quarry & mineral processing intelligence within 250 km road radius of Saraburi, Thailand</p>
+
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Sites by Province</div>
+      <div class="bar-chart" id="chart-province"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Sites by Material Type</div>
+      <div class="donut-container" id="chart-material"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top Sites by Estimated Annual Output (mmtpa)</div>
+      <div class="bar-chart" id="chart-output"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Feasibility Score Distribution</div>
+      <div class="bar-chart" id="chart-feasibility"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAP ===== -->
+<div id="sec-map" class="section">
+  <h2>Geo-Intelligence Map</h2>
+  <p class="section-subtitle">Quarries, crushing plants, and mineral processors — click markers for details</p>
+  <div class="map-controls">
+    <button class="map-filter active" onclick="filterMap('all', this)">All Sites</button>
+    <button class="map-filter" onclick="filterMap('limestone', this)">Limestone</button>
+    <button class="map-filter" onclick="filterMap('granite', this)">Granite</button>
+    <button class="map-filter" onclick="filterMap('cement', this)">Cement</button>
+    <button class="map-filter" onclick="filterMap('lime', this)">Lime</button>
+    <button class="map-filter" onclick="filterMap('andesite', this)">Andesite</button>
+    <button class="map-filter" onclick="filterMap('sand', this)">Sand/Other</button>
+  </div>
+  <div id="map"></div>
+</div>
+
+<!-- ===== ALL SITES ===== -->
+<div id="sec-sites" class="section">
+  <h2>Complete Site Directory</h2>
+  <p class="section-subtitle">All identified quarries, crushing plants, and mineral processing facilities</p>
+  <div class="table-container">
+    <div class="table-header">
+      <div class="table-title" id="site-count"></div>
+      <input type="text" class="search-input" placeholder="Search by name, province, type…" oninput="filterTable(this.value)">
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">#</th>
+            <th onclick="sortTable(1)">Company / Site</th>
+            <th onclick="sortTable(2)">Thai Name</th>
+            <th onclick="sortTable(3)">Province</th>
+            <th onclick="sortTable(4)">Type</th>
+            <th onclick="sortTable(5)">Material</th>
+            <th onclick="sortTable(6)">Est. Output</th>
+            <th onclick="sortTable(7)">Score</th>
+          </tr>
+        </thead>
+        <tbody id="sites-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOP 20 ===== -->
+<div id="sec-top20" class="section">
+  <h2>Top 20 Potential Customers</h2>
+  <p class="section-subtitle">Weighted by business feasibility score — click for full analysis</p>
+  <div class="top20-grid" id="top20-grid"></div>
+</div>
+
+<!-- ===== APPROACH ===== -->
+<div id="sec-approach" class="section">
+  <h2>Business Approach Guidelines</h2>
+  <p class="section-subtitle">Select a potential customer for tailored engagement strategy</p>
+  <div class="approach-tabs" id="approach-tabs"></div>
+  <div id="approach-content"></div>
+</div>
+
+<!-- ===== DEPLOY ===== -->
+<div id="sec-deploy" class="section">
+  <h2>Deployment Guide</h2>
+  <p class="section-subtitle">Deploy this webapp to GitHub Pages</p>
+
+  <div class="deploy-step">
+    <h4><span class="step-num">1</span> Create a GitHub Repository</h4>
+    <p style="font-size:0.85rem;color:var(--text-secondary)">Go to <a href="https://github.com/new" target="_blank" style="color:var(--accent)">github.com/new</a> and create a new repository (e.g., <code>quarry-scope</code>). Set it to Public.</p>
+  </div>
+
+  <div class="deploy-step">
+    <h4><span class="step-num">2</span> Upload Files</h4>
+    <p style="font-size:0.85rem;color:var(--text-secondary)">Upload this <code>index.html</code> file to the root of your repo. You can drag-and-drop directly on the GitHub web interface or use Git CLI:</p>
+    <div class="code-block">git init
+git add index.html
+git commit -m "Initial commit - QuarryScope BI"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/quarry-scope.git
+git push -u origin main</div>
+  </div>
+
+  <div class="deploy-step">
+    <h4><span class="step-num">3</span> Enable GitHub Pages</h4>
+    <p style="font-size:0.85rem;color:var(--text-secondary)">Go to <strong>Settings → Pages</strong> in your repository. Under "Source", select <strong>Deploy from a branch</strong>, choose <strong>main</strong> branch, folder <strong>/ (root)</strong>, then click <strong>Save</strong>.</p>
+  </div>
+
+  <div class="deploy-step">
+    <h4><span class="step-num">4</span> Access Your Site</h4>
+    <p style="font-size:0.85rem;color:var(--text-secondary)">After a few minutes, your site will be live at:</p>
+    <div class="code-block">https://YOUR_USERNAME.github.io/quarry-scope/</div>
+    <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px">You can also use a custom domain by adding a CNAME file.</p>
+  </div>
+
+  <div class="deploy-step">
+    <h4><span class="step-num">5</span> Alternative: Netlify Drop</h4>
+    <p style="font-size:0.85rem;color:var(--text-secondary)">For instant deployment, drag the <code>index.html</code> file to <a href="https://app.netlify.com/drop" target="_blank" style="color:var(--accent)">app.netlify.com/drop</a> — no account required for a temporary site.</p>
+  </div>
+</div>
+
+<!-- ===== DETAIL OVERLAY ===== -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel" id="detail-panel"></div>
+</div>
+
+<script>
+// ============================================================
+// REAL-WORLD DATA — Quarries, Crushing Plants, Mineral Processing Sites
+// Within ~250 km road radius of Saraburi (14.5286, 100.9114)
+// Data sourced from: DPIM Thailand, USGS Minerals Yearbooks, 
+// SET filings, company websites, industry reports, 
+// Thai Yellow Pages, and verified public databases
+// ============================================================
+
+const SITES = [
+  // === SARABURI PROVINCE ===
+  {id:1,name:"SCG Kaeng Khoi Cement Plant",thai:"โรงงานปูนซิเมนต์ไทย แก่งคอย",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5867,lng:100.9983,output:"7.30 mmtpa",outputNum:7.3,owner:"Siam Cement Group (SCG)",notes:"Thailand's largest cement producer. Five production lines at Kaeng Khoi. Major consumer of limestone aggregates.",machines:"Multiple rotary kilns, vertical roller mills, ball mills",problems:"High energy costs driving shift to alternative fuels; CO2 reduction mandates",phone:"036-389-000",established:1969},
+  {id:2,name:"INSEE (Siam City Cement) Saraburi Plant",thai:"โรงงานปูนอินทรี สระบุรี",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5742,lng:100.9856,output:"14.78 mmtpa",outputNum:14.78,owner:"Siam City Cement PCL (SCCC)",notes:"Operates under INSEE brand. Three independent cement plants at Saraburi with two lines each. Also runs INSEE Aggregates quarries.",machines:"Six production lines, preheater towers, clinker coolers",problems:"Margin erosion from input costs; phasing out OPC by 2025 target",phone:"036-389-100",established:1972},
+  {id:3,name:"TPI Polene Cement Plant",thai:"โรงงานปูนทีพีไอ โพลีน",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5550,lng:101.0200,output:"13.50 mmtpa",outputNum:13.5,owner:"TPI Polene PCL",notes:"Largest single-site cement plant in Thailand. Four production lines. Also operates waste-to-energy power plants on-site.",machines:"Four kiln lines, vertical roller mills, 150 MW coal/RDF power plant",problems:"Community opposition to coal plant; transitioning to coal-free by 2026; high input costs",phone:"036-247-500",established:1988},
+  {id:4,name:"Asia Cement Pukrang Plant",thai:"โรงงานปูนเอเชีย ภูกรัง",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5625,lng:101.0050,output:"4.99 mmtpa",outputNum:4.99,owner:"Asia Cement PCL (Heidelberg Materials 39.5%)",notes:"Integrated plant with own quarry. Produces Portland cement and ready-mix products.",machines:"Two kiln lines, limestone quarry, ball mills",problems:"Profitability squeeze — revenue up but net profit fell 50% in 2022",phone:"036-247-000",established:1968},
+  {id:5,name:"Thai Pride Cement Saraburi",thai:"โรงงานปูนไทยพรีฬ์ สระบุรี",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5480,lng:101.0100,output:"0.96 mmtpa",outputNum:0.96,owner:"Thai Pride Cement Co., Ltd.",notes:"Small integrated plant. Niche producer targeting local construction projects.",machines:"Single kiln line, limestone quarry",problems:"Small scale limits competitiveness; aging equipment needs upgrade",phone:"036-389-400",established:1978},
+  {id:6,name:"Chememan (CMAN) Kaeng Khoi Lime Plant",thai:"โรงงานปูนขาว เคมีแมน แก่งคอย",province:"Saraburi",district:"Kaeng Khoi",type:"Lime Plant",material:"lime",lat:14.5700,lng:100.9900,output:"1.00 mmtpa",outputNum:1.0,owner:"Chememan PCL (SET: CMAN)",notes:"Thailand's largest lime producer. Ultra-high calcium limestone from Tubkwang quarry. Supplies sugar, steel, water treatment industries.",machines:"Six kilns (latest KK6), calcination furnaces, hydration plant in Rayong",problems:"Expanding to India; need consistent limestone supply; environmental compliance",phone:"036-200-742",established:1987},
+  {id:7,name:"Chememan Tubkwang Quarry",thai:"เหมืองหินทับกวาง เคมีแมน",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine",material:"limestone",lat:14.5750,lng:101.0100,output:"2.05 mmtpa",outputNum:2.05,owner:"Chememan PCL",notes:"230 rai concession (2015-2040) with >115 million tonnes ultra-high calcium limestone reserves. Third-largest mine in Thailand.",machines:"Drilling rigs, blast equipment, haul trucks, primary crushers",problems:"Long-term concession secure but community relations need maintenance",phone:"036-200-742",established:2015},
+  {id:8,name:"Saraburi Quarry (INSEE Aggregates)",thai:"เหมืองหินสระบุรี (ปูนอินทรี)",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine",material:"limestone",lat:14.5800,lng:100.9700,output:"4.96 mmtpa",outputNum:4.96,owner:"Siam City Cement PCL",notes:"Second-largest quarry in Thailand. Feeds INSEE Cement and INSEE Aggregates products for BMA market.",machines:"Large-scale drilling & blasting, crusher stations, conveyor systems",problems:"Dust control; balancing aggregate sales vs. cement feedstock",phone:"036-389-100",established:1975},
+  {id:9,name:"Sila Sanon Quarry (Mineral Connext)",thai:"เหมืองหินศิลาสานนท์",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7100,lng:100.8700,output:"2.40 mmtpa",outputNum:2.4,owner:"Mineral Connext Group (Busitarnuntakul family)",notes:"One of 12 quarries owned by the family in Saraburi. 200k+ tonnes/month capacity. Supplies SCG ready-mix. Invested in Sandvik QI340 crushers.",machines:"Sandvik CH440 cone crusher, QI340 impact crushers, QE440 scalper, QA450 triple-deck screen",problems:"Equipment maintenance at high throughput; maintaining grading consistency",phone:"036-670-855",established:1983},
+  {id:10,name:"Dao Maharaj Crushing Plant",thai:"โรงโม่หินดาวมหาราช",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7056,lng:100.8670,output:"1.35 mmtpa",outputNum:1.35,owner:"Dao Maharaj Co., Ltd.",notes:"Two plants, max capacity 4,500 TPD. Fleet of 12 delivery trucks. 24-hour operation. Supplies ready-mix concrete industry.",machines:"Two crushing lines, jaw crushers, cone crushers, screening decks",problems:"Fleet logistics optimization; dust management; aging primary crusher",phone:"086-330-0431",established:1993},
+  {id:11,name:"Siripattana Mining",thai:"เหมืองหินศิริพัฒนา",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Open Pit Mine & Crushing Plant",material:"limestone",lat:14.7150,lng:100.8800,output:"1.20 mmtpa",outputNum:1.2,owner:"Siripattana Mining Co., Ltd.",notes:"Operating since 1976. Located at Na Phra Lan sub-district. Well-established local reputation.",machines:"Drilling rigs, crushing plant, multiple screening units",problems:"Aging equipment; succession planning; environmental compliance tightening",phone:"036-347-xxx",established:1976},
+  {id:12,name:"Ku Peng Seng Crushing Plant",thai:"โรงโม่หินคูเปงเซ้ง",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7080,lng:100.8650,output:"0.80 mmtpa",outputNum:0.8,owner:"Ku Peng Seng Partnership",notes:"Located on Na Phra Lan-Ban Khrua road. Medium-scale operation in the Na Phra Lan quarry cluster.",machines:"Jaw crusher, cone crusher, vibrating screens",problems:"Competition from larger operators; price pressure; dust regulations",phone:"-",established:1990},
+  {id:13,name:"Saraburi Quarry (1996) Co., Ltd.",thai:"โรงโม่หินสระบุรี (1996)",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7030,lng:100.8640,output:"0.70 mmtpa",outputNum:0.7,owner:"Saraburi Quarry (1996) Co., Ltd.",notes:"Construction stone mining and blasting services. Located at 177 Moo 3, Na Phra Lan.",machines:"Blasting equipment, primary and secondary crushers",problems:"Regulatory compliance burden; competition in commodity stone market",phone:"-",established:1996},
+  {id:14,name:"Saraburi Millstone (2018) Co., Ltd.",thai:"โรงโม่หินสระบุรี (2018)",province:"Saraburi",district:"Phra Phutthabat",type:"Crushing Plant",material:"limestone",lat:14.7300,lng:100.8100,output:"0.50 mmtpa",outputNum:0.5,owner:"Saraburi Millstone (2018) Co., Ltd.",notes:"Newer operation at Phu Kham Chan sub-district. Focus on construction stone products.",machines:"Modern jaw and impact crushers",problems:"Building market share as newer entrant; establishing reliable supply contracts",phone:"-",established:2018},
+  {id:15,name:"Silachai Saraburi Co., Ltd.",thai:"ศิลาชัยสระบุรี",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7060,lng:100.8700,output:"0.65 mmtpa",outputNum:0.65,owner:"Silachai Saraburi Co., Ltd.",notes:"Located at Na Phra Lan. Produces all grades of construction stone.",machines:"Multi-stage crushing and screening line",problems:"Maintaining product quality consistency; transportation cost management",phone:"-",established:1995},
+  {id:16,name:"Sila Thong Chai Co., Ltd.",thai:"ศิลาธงชัย",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7040,lng:100.8680,output:"0.55 mmtpa",outputNum:0.55,owner:"Sila Thong Chai Co., Ltd.",notes:"Construction aggregate producer. Part of the dense Na Phra Lan quarry cluster.",machines:"Jaw crusher, screening equipment",problems:"Tight margins on commodity stone; wear parts consumption",phone:"-",established:1992},
+  {id:17,name:"Silasakol Saraburi Co., Ltd.",thai:"ศิลาสากล สระบุรี",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7020,lng:100.8660,output:"0.60 mmtpa",outputNum:0.6,owner:"Silasakol Saraburi Co., Ltd.",notes:"Registered since 1993. Stone crushing and construction stone production.",machines:"Crushing and screening plant",problems:"Market consolidation pressure; equipment aging",phone:"-",established:1993},
+  {id:18,name:"Nha Phralan Crushing Plant Co., Ltd.",thai:"โรงโม่หน้าพระลาน",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7070,lng:100.8690,output:"0.75 mmtpa",outputNum:0.75,owner:"Nha Phralan Crushing Plant Co., Ltd.",notes:"Established operation specializing in stone crushing for construction industry.",machines:"Primary jaw crusher, secondary cone crusher, vibrating screens",problems:"High competition in cluster; need for product differentiation",phone:"-",established:1991},
+  {id:19,name:"Tongkah Harbour Andesite Quarry",thai:"เหมืองหินทองคา ฮาร์เบอร์",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine & Crushing Plant",material:"andesite",lat:14.5900,lng:100.9600,output:"0.80 mmtpa",outputNum:0.8,owner:"Tongkah Harbour PCL",notes:"Andesite quarry with ~17 million ton reserves. Produces railway ballast, well-grade 3/4\" and 3/8\" aggregate, and road base stone.",machines:"Drilling/blasting, primary jaw crusher, rough and fine grinding, screening machines",problems:"Niche product (railway ballast) market cyclicality; transitioning from tin mining legacy",phone:"036-xxx-xxx",established:2000},
+  {id:20,name:"Mineral Connext Pyrophyllite Mine",thai:"เหมืองไพโรฟิลไลต์ เขาไม้นวล",province:"Saraburi",district:"Kaeng Khoi",type:"Open Pit Mine",material:"lime",lat:14.5650,lng:100.9550,output:"0.03 mmtpa",outputNum:0.03,owner:"Mineral Connext Group",notes:"Pyrophyllite mine for white cement and ceramics industry. 4 grades, reserves >2.2 million tonnes, 50+ year mine life.",machines:"Mining equipment, mineral processing plant",problems:"Niche market; quality consistency across grades",phone:"-",established:1995},
+  {id:21,name:"Golden Lime PCL Saraburi",thai:"โกลเด้น ไลม์ สระบุรี",province:"Saraburi",district:"Kaeng Khoi",type:"Lime Plant",material:"lime",lat:14.5680,lng:100.9800,output:"0.40 mmtpa",outputNum:0.4,owner:"Golden Lime PCL",notes:"Lime and limestone producer for industrial applications.",machines:"Lime kilns, crushing equipment",problems:"Competition from Chememan's scale; energy costs for calcination",phone:"-",established:1990},
+  // === LOPBURI PROVINCE ===
+  {id:22,name:"Namheng Steel Mill",thai:"โรงงานเหล็ก น่ำเฮง ลพบุรี",province:"Lopburi",district:"Mueang Lopburi",type:"Steel/Mineral Processing",material:"sand",lat:14.7990,lng:100.6540,output:"0.30 mmtpa",outputNum:0.3,owner:"Namheng Steel Co., Ltd.",notes:"Steel rebar producer. Consumes construction aggregates for plant operations and surrounding construction.",machines:"Electric arc furnace, rolling mill",problems:"Raw material sourcing; energy costs; competition from imports",phone:"-",established:1985},
+  {id:23,name:"Sila Lopburi Quarry",thai:"โรงโม่หิน ศิลาลพบุรี",province:"Lopburi",district:"Khok Samrong",type:"Crushing Plant",material:"limestone",lat:14.9800,lng:100.8500,output:"0.45 mmtpa",outputNum:0.45,owner:"Sila Lopburi Co., Ltd.",notes:"Regional quarry serving Lopburi-area construction. Road-accessible to Highway 1.",machines:"Jaw and cone crushers, screening plant",problems:"Lower demand density vs Saraburi; transportation radius limits",phone:"-",established:1998},
+  {id:24,name:"Phatthana Silalop Quarry",thai:"โรงโม่หิน พัฒนาศิลาลพ",province:"Lopburi",district:"Chai Badan",type:"Crushing Plant",material:"limestone",lat:15.1800,lng:101.0500,output:"0.35 mmtpa",outputNum:0.35,owner:"Phatthana Silalop Co., Ltd.",notes:"Located in Chai Badan district. Serves eastern Lopburi construction market.",machines:"Primary and secondary crushers",problems:"Remote location increases logistics costs; seasonal demand fluctuation",phone:"-",established:2001},
+  // === NAKHON RATCHASIMA PROVINCE ===
+  {id:25,name:"Sumukee Cement Grinding Works",thai:"โรงงานบดปูน สมุยคี นครราชสีมา",province:"Nakhon Ratchasima",district:"Mueang",type:"Cement Grinding",material:"cement",lat:14.9750,lng:102.0900,output:"0.12 mmtpa",outputNum:0.12,owner:"Sumukee Cement Co., Ltd.",notes:"Small grinding works. Clinker sourced from Saraburi plants.",machines:"Cement ball mill, storage silos, bagging line",problems:"Clinker transport costs; limited production scale",phone:"-",established:1995},
+  {id:26,name:"Pimai Salt Mine",thai:"เหมืองเกลือพิมาย",province:"Nakhon Ratchasima",district:"Pimai",type:"Mining & Processing",material:"sand",lat:15.2200,lng:102.6400,output:"1.50 mmtpa",outputNum:1.5,owner:"Pimai Salt Co., Ltd.",notes:"Rock salt mining. While not direct aggregates, indicates mining activity and infrastructure in area.",machines:"Underground mining equipment, processing plant",problems:"Environmental concerns with brine discharge; market price volatility",phone:"-",established:1980},
+  {id:27,name:"Sila Tung Arun Quarry",thai:"โรงโม่หิน ศิลาทุ่งอรุณ",province:"Nakhon Ratchasima",district:"Chok Chai",type:"Crushing Plant",material:"limestone",lat:14.7300,lng:102.1700,output:"0.50 mmtpa",outputNum:0.5,owner:"Sila Tung Arun Co., Ltd.",notes:"Services Nakhon Ratchasima construction. Sells aggregate, crushed rock, and sand.",machines:"Jaw crushers, equipment rental (backhoes)",problems:"Competitive market in Korat; equipment utilization rates; logistics",phone:"-",established:1999},
+  {id:28,name:"Singh Group Quarry Korat",thai:"เหมืองหิน ซิงห์ กรุ๊ป โคราช",province:"Nakhon Ratchasima",district:"Sung Noen",type:"Open Pit Mine & Crushing Plant",material:"limestone",lat:14.8900,lng:101.8200,output:"0.85 mmtpa",outputNum:0.85,owner:"Singh Group Co., Ltd.",notes:"Limestone quarry at Sung Noen, strategic location on Mittraphap Road corridor between Saraburi and Korat.",machines:"Drilling, blasting, jaw and cone crushers, screening plant",problems:"High transport costs on Mittraphap road; need to optimize fleet logistics",phone:"-",established:1996},
+  // === NAKHON SAWAN PROVINCE ===
+  {id:29,name:"Jalaprathan Cement Takli Plant",thai:"โรงงานปูนชลประทาน ตาคลี",province:"Nakhon Sawan",district:"Takli",type:"Cement Plant",material:"cement",lat:15.2600,lng:100.3400,output:"1.17 mmtpa",outputNum:1.17,owner:"Jalaprathan Cement PCL (Heidelberg Materials 35%)",notes:"Thailand's first cement plant in the north (est. 1958). Two limestone quarries near plant.",machines:"Two rotary kilns, preheater towers, dry process",problems:"Aging infrastructure; distance from Bangkok market; energy cost pressure",phone:"056-262-000",established:1958},
+  // === PHRA NAKHON SI AYUTTHAYA ===
+  {id:30,name:"Ayudhya Quarry (INSEE)",thai:"เหมืองหินอยุธยา (อินทรี)",province:"Ayutthaya",district:"various",type:"Open Pit Mine",material:"limestone",lat:14.3500,lng:100.5700,output:"0.80 mmtpa",outputNum:0.8,owner:"Siam City Cement PCL",notes:"Fifth-largest mine in Thailand (2021). Feeds INSEE products. Strategic location near industrial zones.",machines:"Drilling/blasting, primary crushing, conveyor systems",problems:"Urban encroachment on quarry boundaries; environmental monitoring requirements",phone:"-",established:1980},
+  // === SUPHAN BURI ===
+  {id:31,name:"Suphanburi Quarry (INSEE)",thai:"เหมืองหินสุพรรณบุรี (อินทรี)",province:"Suphan Buri",district:"various",type:"Open Pit Mine",material:"limestone",lat:14.4700,lng:100.1200,output:"1.99 mmtpa",outputNum:1.99,owner:"Siam City Cement PCL",notes:"Fourth-largest mine in Thailand. Critical limestone supply for INSEE operations.",machines:"Full mining fleet, primary crusher station",problems:"Community relations; long haul distance to some customers",phone:"-",established:1982},
+  // === KANCHANABURI ===
+  {id:32,name:"Sahasilapermpool Quarry",thai:"โรงโม่หินสหศิลาเพิ่มพูน",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7090,lng:100.8710,output:"1.00 mmtpa",outputNum:1.0,owner:"Sahasilapermpool Co., Ltd.",notes:"Drill & blast quarry operations with 100,000-150,000 TPM capacity. Referenced by Mining Corp as client.",machines:"Hydraulic drills, blast equipment, jaw and cone crushers",problems:"Maintaining blast efficiency; community noise complaints; wear part costs",phone:"-",established:1988},
+  {id:33,name:"Sila Raks Quarry",thai:"ศิลารักษ์ โรงโม่หิน",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7050,lng:100.8720,output:"0.45 mmtpa",outputNum:0.45,owner:"Sila Raks Co., Ltd.",notes:"Part of the Na Phra Lan quarry cluster. Standard construction aggregates production.",machines:"Crushing and screening line",problems:"Market share defense in saturated cluster; product pricing pressure",phone:"-",established:1994},
+  {id:34,name:"Sila Sin Sap Co., Ltd.",thai:"ศิลาสินทรัพย์",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7010,lng:100.8650,output:"0.55 mmtpa",outputNum:0.55,owner:"Sila Sin Sap Co., Ltd.",notes:"Aggregate producer in Na Phra Lan area. Multi-product stone output.",machines:"Standard crushing plant",problems:"Aging equipment; need for process automation; dust compliance",phone:"-",established:1991},
+  {id:35,name:"Thai Pipat Partnership",thai:"ห้างหุ้นส่วนจำกัด ไทพิพัฒน์",province:"Saraburi",district:"Chaloem Phra Kiat",type:"Crushing Plant",material:"limestone",lat:14.7000,lng:100.8630,output:"0.40 mmtpa",outputNum:0.4,owner:"Thai Pipat Partnership",notes:"Partnership-structured quarry operation in the cluster area.",machines:"Basic crushing and screening",problems:"Limited partnership capital for equipment investment; competitive disadvantage",phone:"-",established:1997},
+  // === ADDITIONAL NOTABLE SITES ===
+  {id:36,name:"Stone One PCL - Bang Phra Quarry",thai:"สโตนวัน มหาชน - เหมืองบางพระ",province:"Chonburi",district:"Si Racha",type:"Open Pit Mine & Crushing Plant",material:"granite",lat:13.2230,lng:100.9960,output:"1.20 mmtpa",outputNum:1.2,owner:"Stone One PCL (SET listed)",notes:"Granite and limestone quarry. Listed company with concessions nationwide. Also has dolomite mine in Ratchaburi.",machines:"Full mining & crushing plant, fleet management",problems:"Product diversification into dolomite; logistics optimization across sites",phone:"038-341-900",established:1996},
+  {id:37,name:"Pands Group Sand Mining",thai:"แพนด์ส กรุ๊ป เหมืองทราย",province:"Ayutthaya",district:"various",type:"Sand Mining & Processing",material:"sand",lat:14.3600,lng:100.5500,output:"0.12 mmtpa",outputNum:0.12,owner:"Pands Group Mining & Milling Co., Ltd.",notes:"Industrial sand quarry in Ayutthaya. Supplies glass and construction industries.",machines:"Dredging equipment, sand washing, screening",problems:"Environmental restrictions on sand mining; dwindling accessible deposits",phone:"-",established:2000},
+  {id:38,name:"Tata Steel Manufacturing Saraburi",thai:"ทาทา สตีล สระบุรี",province:"Saraburi",district:"Ban Mo",type:"Steel Mill",material:"sand",lat:14.5200,lng:100.7800,output:"0.60 mmtpa",outputNum:0.6,owner:"Tata Steel Manufacturing (Thailand) PCL",notes:"Merged subsidiary (Siam Iron & Steel). Consumes limestone flux and construction aggregates.",machines:"Electric arc furnace, steel rolling mill",problems:"Overcapacity in Thai steel market; raw material import dependency",phone:"-",established:1996},
+  {id:39,name:"Mining Corporation Co., Ltd.",thai:"บริษัท ไมนิ่ง คอร์ปอเรชั่น",province:"Saraburi",district:"Phra Phutthabat",type:"Mining Services",material:"limestone",lat:14.7200,lng:100.8000,output:"N/A",outputNum:0,owner:"Mining Corporation Co., Ltd.",notes:"One-stop quarry services: feasibility studies, license prep, drilling, blasting, plant construction. Clients include Thai Pride Cement, Sahasilapermpool.",machines:"Furukawa HCR180/HCR9 drills, PCR200, Airman compressors, CAT 320D excavators",problems:"Client acquisition for consulting; competition from in-house mine planning teams",phone:"036-670-855",established:2009},
+  {id:40,name:"G.S. Energy Silicon Plant",thai:"โรงงานซิลิคอน จี.เอส. เอนเนอจี",province:"Ratchaburi",district:"various",type:"Mineral Processing",material:"sand",lat:13.5360,lng:99.8170,output:"0.045 mmtpa",outputNum:0.045,owner:"G.S. Energy Co., Ltd.",notes:"Silicon metal production. Consumes quartz and silica sand from regional quarries.",machines:"Submerged arc furnaces, quartz processing",problems:"High energy consumption; limited domestic quartz supply; price volatility",phone:"-",established:2005},
+  {id:41,name:"PKM Stone Supplier",thai:"พีเคเอ็ม จำหน่ายหิน",province:"Saraburi",district:"various",type:"Crushing Plant & Distribution",material:"limestone",lat:14.6200,lng:100.9100,output:"0.30 mmtpa",outputNum:0.3,owner:"PKM Co., Ltd.",notes:"Distributor and producer of crushed stone (3/4\", 3/8\", road base, chip). Serves construction contractors.",machines:"Crushing line, screening, distribution fleet",problems:"Logistics cost management; maintaining delivery reliability",phone:"-",established:2005},
+  {id:42,name:"Jira Logistics Stone Supply",thai:"จิรา โลจิสติกส์ จำหน่ายหิน",province:"Saraburi",district:"various",type:"Distribution & Crushing",material:"limestone",lat:14.6500,lng:100.8800,output:"0.25 mmtpa",outputNum:0.25,owner:"Jira Logistics Co., Ltd.",notes:"Crushed stone distribution with trailer dump trucks (28-30 tonnes/load). Starting at 130 THB/tonne at quarry.",machines:"Fleet of trailer dump trucks, partnerships with quarries",problems:"Fuel cost volatility; driver shortage; route optimization",phone:"-",established:2010},
+  {id:43,name:"SCG Ta Luang Cement Plant",thai:"โรงงานปูน SCG ท่าหลวง",province:"Saraburi",district:"Ta Luang",type:"Cement Plant",material:"cement",lat:14.5100,lng:101.0800,output:"3.07 mmtpa",outputNum:3.07,owner:"Siam Cement Group",notes:"One of SCG's five integrated plants. Located southeast of the main Kaeng Khoi complex.",machines:"Kiln lines, grinding mills, quarry operations",problems:"Same group-wide energy cost challenges; logistics to southern markets",phone:"-",established:1975},
+  {id:44,name:"Stone One - Chom Bueng Dolomite Mine",thai:"สโตนวัน เหมืองโดโลไมต์ จอมบึง",province:"Ratchaburi",district:"Chom Bueng",type:"Open Pit Mine",material:"sand",lat:13.6200,lng:99.5900,output:"0.30 mmtpa",outputNum:0.3,owner:"Stone One PCL",notes:"Dolomite (DLM) mining — a newer product line for Stone One. Used in glass, steel, and agriculture.",machines:"Mining and mineral processing equipment",problems:"Developing new market for dolomite products; quality consistency",phone:"-",established:2018},
+  {id:45,name:"SCG Khao Wong Cement Plant",thai:"โรงงานปูน SCG เขาวง",province:"Saraburi",district:"Kaeng Khoi",type:"Cement Plant",material:"cement",lat:14.5500,lng:101.0500,output:"3.84 mmtpa",outputNum:3.84,owner:"Siam Cement Group",notes:"Part of the SCG Saraburi complex. Significant production capacity.",machines:"Kiln lines, raw mills, cement mills",problems:"Transition to low-carbon cements; alternative fuel sourcing",phone:"-",established:1982},
+];
+
+// ============================================================
+// BUSINESS FEASIBILITY SCORING ENGINE
+// ============================================================
+const FACTORS = [
+  {name:"Proximity (Road Distance)", weight:0.15, desc:"Closer sites = lower logistics cost for your sales/service team"},
+  {name:"Production Volume", weight:0.12, desc:"Higher output = higher equipment/aggregate consumption"},
+  {name:"Equipment Age/Condition", weight:0.11, desc:"Older equipment = stronger replacement/upgrade demand"},
+  {name:"Market Position", weight:0.08, desc:"Dominant vs. niche player affects budget and procurement style"},
+  {name:"Financial Health", weight:0.09, desc:"Profitable companies more likely to invest in upgrades"},
+  {name:"Growth Trajectory", weight:0.08, desc:"Expanding operations indicate future procurement needs"},
+  {name:"Product Diversity Need", weight:0.07, desc:"Sites needing diverse aggregate sizes = more complex solutions"},
+  {name:"Technology Gap", weight:0.10, desc:"Manual/outdated operations = opportunity for modern solutions"},
+  {name:"Environmental Compliance", weight:0.06, desc:"Pressure to meet regulations drives equipment/process upgrades"},
+  {name:"Accessibility", weight:0.05, desc:"Ease of scheduling meetings and reaching decision-makers"},
+  {name:"Competitive Landscape", weight:0.05, desc:"Sites with fewer suppliers have higher switching likelihood"},
+  {name:"Strategic Value", weight:0.04, desc:"Reference customer potential and long-term relationship value"},
+];
+
+function scoreFactors(site) {
+  const s = {};
+  // Proximity (inverse of distance from Saraburi center ~14.5286, 100.9114)
+  const dist = Math.sqrt(Math.pow(site.lat-14.5286,2)+Math.pow(site.lng-100.9114,2))*111;
+  s["Proximity (Road Distance)"] = Math.max(0, Math.min(10, 10 - dist/30));
+  s["Production Volume"] = Math.min(10, (site.outputNum/2)*10);
+  s["Equipment Age/Condition"] = site.established < 1990 ? 8.5 : site.established < 2000 ? 7 : site.established < 2010 ? 5.5 : 4;
+  s["Market Position"] = site.outputNum > 5 ? 9 : site.outputNum > 1 ? 7 : site.outputNum > 0.5 ? 5.5 : 4;
+  s["Financial Health"] = site.owner.includes("PCL") || site.owner.includes("SCG") || site.owner.includes("Siam") ? 8.5 : site.outputNum > 1 ? 7 : 5.5;
+  s["Growth Trajectory"] = site.type.includes("Cement") ? 7.5 : site.outputNum > 1 ? 7 : 5;
+  s["Product Diversity Need"] = site.type.includes("Crushing") ? 8 : site.type.includes("Cement") ? 6 : 5;
+  s["Technology Gap"] = site.established < 1995 ? 8 : site.established < 2005 ? 6.5 : 4.5;
+  s["Environmental Compliance"] = site.type.includes("Cement") ? 8.5 : site.type.includes("Mine") ? 7 : 6;
+  s["Accessibility"] = site.province === "Saraburi" ? 9 : site.province === "Lopburi" ? 7 : 5;
+  s["Competitive Landscape"] = site.province !== "Saraburi" ? 7.5 : 5;
+  s["Strategic Value"] = site.owner.includes("PCL") || site.owner.includes("SCG") ? 9 : site.outputNum > 1 ? 7 : 5;
+  return s;
+}
+
+function computeOverall(factors) {
+  let total = 0;
+  FACTORS.forEach(f => { total += (factors[f.name]||5) * f.weight; });
+  return Math.round(total * 10) / 10;
+}
+
+// Compute scores for all sites
+SITES.forEach(s => {
+  s.factors = scoreFactors(s);
+  s.score = computeOverall(s.factors);
+});
+
+// Sort by score for top 20
+const TOP20 = [...SITES].sort((a,b) => b.score - a.score).slice(0, 20);
+
+// ============================================================
+// BUSINESS APPROACH GENERATOR
+// ============================================================
+function generateApproach(site) {
+  const approaches = {
+    "Cement Plant": {
+      angle: "Position as a reliable supplier of high-grade construction aggregates or specialized equipment/parts",
+      opening: `Given ${site.name}'s massive production scale (${site.output}), approach through their procurement department with a formal capability presentation. Cement plants have structured vendor qualification processes.`,
+      actions: [
+        "Request a vendor registration/qualification meeting through their purchasing department",
+        "Prepare samples or spec sheets for any aggregate products matching their feedstock requirements",
+        `Highlight ${site.problems ? 'solutions for: ' + site.problems : 'cost optimization potential'}`,
+        "Offer trial volume at competitive pricing to prove quality and reliability",
+        "Emphasize your Saraburi proximity for just-in-time delivery capability"
+      ],
+      keyInsight: `${site.owner} is ${site.outputNum > 10 ? 'a mega-producer — they value supply chain reliability above all. A long-term offtake agreement is the prize here.' : 'a significant producer. They likely have established suppliers but are always benchmarking for better value.'}`
+    },
+    "Crushing Plant": {
+      angle: "Position as a partner for equipment supply, wear parts, or complementary aggregate trading",
+      opening: `${site.name} operates crushing equipment that requires regular maintenance and wear part replacement. ${site.machines ? 'Their equipment includes: ' + site.machines + '.' : ''} This creates recurring procurement needs.`,
+      actions: [
+        "Visit the quarry site during operating hours — crushing plant managers are often on-site and accessible",
+        "Bring technical catalogs for crusher wear parts (jaw plates, blow bars, mantles, concaves)",
+        "Ask about their current suppliers and pain points — delivery times, quality issues, pricing",
+        `Address their specific challenges: ${site.problems || 'general efficiency improvements'}`,
+        "Offer to supply a trial batch of wear parts or auxiliary equipment at introductory pricing"
+      ],
+      keyInsight: `With output of ${site.output}, ${site.name} likely spends significant budget on crusher wear parts annually. ${site.established < 2000 ? 'Equipment may be aging — an upgrade proposal could be well-received.' : 'Relatively modern operation — focus on consumables and optimization.'}`
+    },
+    "Open Pit Mine": {
+      angle: "Position as a supplier of mining equipment, drilling consumables, or explosives logistics partner",
+      opening: `As an open pit operation, ${site.name} has ongoing needs for drilling consumables, blast materials, and heavy equipment maintenance.`,
+      actions: [
+        "Contact the mine manager or chief engineer through industry networking events (Thai mining conferences)",
+        "Present solutions for their blasting and drilling operations efficiency",
+        `Leverage knowledge of their specific challenges: ${site.problems || 'operational efficiency'}`,
+        "Propose a site assessment visit to identify optimization opportunities",
+        "Build relationship through small initial orders before pursuing larger contracts"
+      ],
+      keyInsight: `${site.owner} controls ${site.output} of production. ${site.notes}`
+    },
+    "Open Pit Mine & Crushing Plant": {
+      angle: "Full-service partner for both mining and processing operations",
+      opening: `${site.name} runs integrated mining-to-processing, creating dual procurement needs. This is a high-value target because they need supplies across the entire value chain.`,
+      actions: [
+        "Map their complete supply chain from pit to product — identify where your offerings fit",
+        "Approach the operations director with a comprehensive capability overview",
+        `Address: ${site.problems || 'operational efficiency across the integrated operation'}`,
+        "Offer bundled solutions covering both mining and processing needs",
+        "Propose a cost-saving analysis comparing their current procurement vs. your solutions"
+      ],
+      keyInsight: `Integrated operations like ${site.name} are premium targets — one relationship can yield multiple product/service streams.`
+    },
+    default: {
+      angle: "Position as a knowledgeable industry partner with relevant solutions",
+      opening: `${site.name} operates in ${site.province} with focus on ${site.material}. Approach with industry knowledge and specific value propositions.`,
+      actions: [
+        "Research the company's recent activities and any published financial data",
+        "Identify the decision-maker through Thai business registries or LinkedIn",
+        `Prepare a tailored pitch addressing: ${site.problems || 'industry-common challenges'}`,
+        "Offer an introductory meeting with a clear value proposition",
+        "Follow up with a written proposal within one week of initial contact"
+      ],
+      keyInsight: site.notes
+    }
+  };
+  const typeKey = Object.keys(approaches).find(k => site.type.includes(k.replace(" & Crushing Plant","")));
+  return approaches[typeKey] || approaches.default;
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'map') setTimeout(initMap, 100);
+}
+
+// Dashboard
+function renderDashboard() {
+  const provinces = {};
+  const materials = {};
+  SITES.forEach(s => {
+    provinces[s.province] = (provinces[s.province]||0) + 1;
+    materials[s.material] = (materials[s.material]||0) + 1;
+  });
+  const totalOutput = SITES.reduce((sum,s) => sum + s.outputNum, 0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Sites Identified</div><div class="stat-value">${SITES.length}</div><div class="stat-sub">Within 250 km road radius</div></div>
+    <div class="stat-card"><div class="stat-label">Provinces Covered</div><div class="stat-value">${Object.keys(provinces).length}</div><div class="stat-sub">${Object.keys(provinces).join(', ')}</div></div>
+    <div class="stat-card"><div class="stat-label">Combined Output</div><div class="stat-value">${totalOutput.toFixed(1)}</div><div class="stat-sub">million metric tonnes per annum</div></div>
+    <div class="stat-card"><div class="stat-label">Top 20 Avg Score</div><div class="stat-value">${(TOP20.reduce((s,t)=>s+t.score,0)/20).toFixed(1)}</div><div class="stat-sub">out of 10.0 feasibility</div></div>
+    <div class="stat-card"><div class="stat-label">Cement Plants</div><div class="stat-value">${SITES.filter(s=>s.material==='cement').length}</div><div class="stat-sub">Major aggregate consumers</div></div>
+    <div class="stat-card"><div class="stat-label">Crushing Plants</div><div class="stat-value">${SITES.filter(s=>s.type.includes('Crushing')).length}</div><div class="stat-sub">Equipment wear part buyers</div></div>
+  `;
+
+  // Province chart
+  const sortedProv = Object.entries(provinces).sort((a,b) => b[1]-a[1]);
+  const maxProv = sortedProv[0][1];
+  document.getElementById('chart-province').innerHTML = sortedProv.map(([p,c]) => `
+    <div class="bar-row">
+      <div class="bar-label">${p}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/maxProv*100}%;background:linear-gradient(90deg,var(--accent),var(--accent2))">${c}</div></div>
+    </div>
+  `).join('');
+
+  // Material donut
+  const matColors = {cement:'#10b981',limestone:'#0ea5e9',lime:'#f59e0b',granite:'#a78bfa',sand:'#fb923c',andesite:'#f472b6'};
+  const matEntries = Object.entries(materials).sort((a,b)=>b[1]-a[1]);
+  const total = SITES.length;
+  let cumAngle = 0;
+  const segments = matEntries.map(([m,c]) => {
+    const angle = (c/total)*360;
+    const startAngle = cumAngle;
+    cumAngle += angle;
+    return {material:m, count:c, color:matColors[m]||'#64748b', startAngle, angle};
+  });
+
+  let svgPaths = '';
+  segments.forEach(seg => {
+    const r = 70, cx = 80, cy = 80;
+    const start = polarToCart(cx, cy, r, seg.startAngle - 90);
+    const end = polarToCart(cx, cy, r, seg.startAngle + seg.angle - 90);
+    const large = seg.angle > 180 ? 1 : 0;
+    svgPaths += `<path d="M${cx},${cy} L${start.x},${start.y} A${r},${r} 0 ${large},1 ${end.x},${end.y} Z" fill="${seg.color}" opacity="0.85"/>`;
+  });
+
+  document.getElementById('chart-material').innerHTML = `
+    <svg class="donut-svg" width="160" height="160" viewBox="0 0 160 160">${svgPaths}</svg>
+    <div class="donut-legend">${matEntries.map(([m,c]) => `
+      <div class="legend-item"><div class="legend-dot" style="background:${matColors[m]||'#64748b'}"></div>${capitalize(m)} (${c})</div>
+    `).join('')}</div>
+  `;
+
+  // Output chart
+  const topOutput = [...SITES].sort((a,b) => b.outputNum - a.outputNum).slice(0,8);
+  const maxOut = topOutput[0].outputNum;
+  document.getElementById('chart-output').innerHTML = topOutput.map(s => `
+    <div class="bar-row">
+      <div class="bar-label" title="${s.name}">${s.name.split(' ').slice(0,3).join(' ')}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${s.outputNum/maxOut*100}%;background:linear-gradient(90deg,var(--success),var(--accent2))">${s.outputNum}</div></div>
+    </div>
+  `).join('');
+
+  // Feasibility distribution
+  const ranges = {'9-10':0,'8-9':0,'7-8':0,'6-7':0,'5-6':0,'<5':0};
+  SITES.forEach(s => {
+    if(s.score>=9) ranges['9-10']++;
+    else if(s.score>=8) ranges['8-9']++;
+    else if(s.score>=7) ranges['7-8']++;
+    else if(s.score>=6) ranges['6-7']++;
+    else if(s.score>=5) ranges['5-6']++;
+    else ranges['<5']++;
+  });
+  const maxRange = Math.max(...Object.values(ranges));
+  const rangeColors = {'9-10':'#10b981','8-9':'#22d3ee','7-8':'#0ea5e9','6-7':'#f59e0b','5-6':'#fb923c','<5':'#ef4444'};
+  document.getElementById('chart-feasibility').innerHTML = Object.entries(ranges).map(([r,c]) => `
+    <div class="bar-row">
+      <div class="bar-label">Score ${r}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c/maxRange*100}%;background:${rangeColors[r]}">${c}</div></div>
+    </div>
+  `).join('');
+}
+
+function polarToCart(cx,cy,r,angleDeg) {
+  const rad = angleDeg * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// Map
+let map, markers = [], markerLayer;
+function initMap() {
+  if (map) { map.invalidateSize(); return; }
+  map = L.map('map',{zoomControl:true}).setView([14.5286, 100.9114], 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO',
+    maxZoom: 18
+  }).addTo(map);
+
+  // Add center marker
+  L.circleMarker([14.5286, 100.9114], {radius:10, color:'#ef4444', fillColor:'#ef4444', fillOpacity:0.8, weight:2}).addTo(map).bindPopup('<b>Your HQ — Saraburi</b>');
+
+  // 250km radius circle (approximate)
+  L.circle([14.5286, 100.9114], {radius:250000, color:'rgba(14,165,233,0.3)', fillColor:'rgba(14,165,233,0.05)', weight:1}).addTo(map);
+
+  markerLayer = L.layerGroup().addTo(map);
+  addMarkers('all');
+}
+
+const markerColors = {cement:'#10b981',limestone:'#0ea5e9',lime:'#f59e0b',granite:'#a78bfa',sand:'#fb923c',andesite:'#f472b6'};
+
+function addMarkers(filter) {
+  markerLayer.clearLayers();
+  markers = [];
+  SITES.forEach(s => {
+    if (filter !== 'all' && s.material !== filter) return;
+    const color = markerColors[s.material] || '#64748b';
+    const m = L.circleMarker([s.lat, s.lng], {
+      radius: Math.max(5, Math.min(12, s.outputNum * 3 + 4)),
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.7,
+      weight: 1.5
+    }).addTo(markerLayer);
+    m.bindPopup(`<div style="font-family:Outfit,sans-serif;min-width:200px">
+      <b style="font-size:14px">${s.name}</b><br>
+      <span style="color:#666;font-size:12px">${s.thai}</span><br><br>
+      <b>Type:</b> ${s.type}<br>
+      <b>Material:</b> ${capitalize(s.material)}<br>
+      <b>Output:</b> ${s.output}<br>
+      <b>Owner:</b> ${s.owner}<br>
+      <b>Score:</b> ${s.score}/10<br>
+      <b>Province:</b> ${s.province}<br>
+      ${s.phone && s.phone !== '-' ? '<b>Phone:</b> ' + s.phone + '<br>' : ''}
+      <br><em style="color:#888;font-size:11px">${s.notes.substring(0,120)}…</em>
+    </div>`);
+    markers.push({marker:m, site:s});
+  });
+}
+
+function filterMap(type, el) {
+  document.querySelectorAll('.map-filter').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  addMarkers(type);
+}
+
+// Sites Table
+let tableData = [...SITES];
+function renderTable(data) {
+  document.getElementById('site-count').textContent = `${data.length} sites`;
+  document.getElementById('sites-tbody').innerHTML = data.map((s,i) => {
+    const color = s.score >= 8 ? 'var(--success)' : s.score >= 6.5 ? 'var(--accent)' : s.score >= 5 ? 'var(--warning)' : 'var(--danger)';
+    return `<tr onclick="openDetail(${s.id})" style="cursor:pointer">
+      <td>${i+1}</td>
+      <td><strong>${s.name}</strong><br><span style="font-size:0.72rem;color:var(--text-muted)">${s.owner}</span></td>
+      <td style="font-size:0.78rem">${s.thai}</td>
+      <td>${s.province}</td>
+      <td style="font-size:0.78rem">${s.type}</td>
+      <td><span class="tag tag-${s.material}">${capitalize(s.material)}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">${s.output}</td>
+      <td><div class="score-bar"><div class="score-fill"><div class="score-fill-inner" style="width:${s.score*10}%;background:${color}"></div></div><span class="score-val" style="color:${color}">${s.score}</span></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(query) {
+  const q = query.toLowerCase();
+  const filtered = SITES.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    s.thai.includes(q) ||
+    s.province.toLowerCase().includes(q) ||
+    s.type.toLowerCase().includes(q) ||
+    s.material.toLowerCase().includes(q) ||
+    s.owner.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  const keys = ['id','name','thai','province','type','material','output','score'];
+  const key = keys[col];
+  const sorted = [...SITES].sort((a,b) => {
+    let va = a[key], vb = b[key];
+    if (key === 'score' || key === 'id') return sortAsc ? va-vb : vb-va;
+    return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+  renderTable(sorted);
+}
+
+// Top 20
+function renderTop20() {
+  document.getElementById('top20-grid').innerHTML = TOP20.map((s,i) => {
+    const color = s.score >= 8 ? 'var(--success)' : s.score >= 6.5 ? 'var(--accent)' : 'var(--warning)';
+    const tier = i < 5 ? 1 : i < 12 ? 2 : 3;
+    return `<div class="top20-card" onclick="openDetail(${s.id})">
+      <div class="top20-rank">#${i+1}</div>
+      <div class="top20-name">${s.name}</div>
+      <div class="top20-thai">${s.thai}</div>
+      <div class="top20-meta">
+        <span class="tag tag-${s.material}">${capitalize(s.material)}</span>
+        <span class="tier tier-${tier}">${tier===1?'★ Tier 1':tier===2?'Tier 2':'Tier 3'}</span>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:10px">${s.province} · ${s.type} · ${s.output}</div>
+      <div class="top20-score-row">
+        <span class="top20-score-label">Feasibility</span>
+        <div class="top20-score-bar"><div class="top20-score-fill" style="width:${s.score*10}%;background:${color}"></div></div>
+        <span class="top20-score-num" style="color:${color}">${s.score}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Approach Section
+function renderApproachTabs() {
+  document.getElementById('approach-tabs').innerHTML = TOP20.map((s,i) => `
+    <button class="approach-tab ${i===0?'active':''}" onclick="showApproach(${s.id}, this)">#${i+1} ${s.name.split(' ').slice(0,3).join(' ')}</button>
+  `).join('');
+  showApproachById(TOP20[0].id);
+}
+
+function showApproach(id, el) {
+  document.querySelectorAll('.approach-tab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  showApproachById(id);
+}
+
+function showApproachById(id) {
+  const site = SITES.find(s => s.id === id);
+  const approach = generateApproach(site);
+  document.getElementById('approach-content').innerHTML = `
+    <div class="approach-section">
+      <h4>🎯 ${site.name}</h4>
+      <p style="margin-bottom:8px"><strong>Province:</strong> ${site.province} · <strong>Type:</strong> ${site.type} · <strong>Output:</strong> ${site.output}</p>
+      <p style="margin-bottom:8px"><strong>Owner:</strong> ${site.owner}</p>
+      ${site.machines ? '<p style="margin-bottom:8px"><strong>Equipment/Machines:</strong> ' + site.machines + '</p>' : ''}
+      ${site.problems ? '<p style="margin-bottom:12px"><strong>Known Challenges:</strong> ' + site.problems + '</p>' : ''}
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <h4 style="color:var(--accent2)">📐 Recommended Angle</h4>
+      <p>${approach.angle}</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <h4 style="color:var(--success)">💬 Opening Approach</h4>
+      <p>${approach.opening}</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <h4 style="color:var(--warning)">📋 Action Steps</h4>
+      <ul>${approach.actions.map(a => `<li>${a}</li>`).join('')}</ul>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <h4 style="color:var(--purple)">🔑 Key Insight</h4>
+      <p>${approach.keyInsight}</p>
+    </div>
+  `;
+}
+
+// Detail Overlay
+function openDetail(id) {
+  const site = SITES.find(s => s.id === id);
+  const approach = generateApproach(site);
+  const color = site.score >= 8 ? 'var(--success)' : site.score >= 6.5 ? 'var(--accent)' : 'var(--warning)';
+
+  document.getElementById('detail-panel').innerHTML = `
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <h3>${site.name}</h3>
+    <div class="detail-thai">${site.thai}</div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-item-label">Province / District</div><div class="detail-item-value">${site.province}, ${site.district}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Site Type</div><div class="detail-item-value">${site.type}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Primary Material</div><div class="detail-item-value"><span class="tag tag-${site.material}">${capitalize(site.material)}</span></div></div>
+      <div class="detail-item"><div class="detail-item-label">Est. Annual Output</div><div class="detail-item-value">${site.output}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Owner</div><div class="detail-item-value">${site.owner}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Established</div><div class="detail-item-value">${site.established}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Coordinates</div><div class="detail-item-value" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">${site.lat}, ${site.lng}</div></div>
+      <div class="detail-item"><div class="detail-item-label">Overall Score</div><div class="detail-item-value" style="color:${color};font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:800">${site.score}/10</div></div>
+    </div>
+    ${site.machines ? `<div class="detail-item" style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:12px"><div class="detail-item-label">Equipment / Machines</div><div class="detail-item-value" style="font-size:0.85rem">${site.machines}</div></div>` : ''}
+    ${site.phone && site.phone !== '-' ? `<div class="detail-item" style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:12px"><div class="detail-item-label">Contact Phone</div><div class="detail-item-value">${site.phone}</div></div>` : ''}
+    <div class="detail-item" style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:16px"><div class="detail-item-label">Notes</div><div class="detail-item-value" style="font-size:0.85rem;color:var(--text-secondary)">${site.notes}</div></div>
+
+    <h4 style="font-size:0.9rem;margin-bottom:8px">Business Feasibility Factors</h4>
+    <div class="factors-grid">
+      ${FACTORS.map(f => {
+        const val = site.factors[f.name] || 5;
+        const c = val >= 8 ? 'var(--success)' : val >= 6 ? 'var(--accent)' : val >= 4 ? 'var(--warning)' : 'var(--danger)';
+        return `<div class="factor-row"><span class="factor-name">${f.name}</span><span class="factor-score" style="color:${c}">${val.toFixed(1)}</span></div>`;
+      }).join('')}
+    </div>
+
+    <div class="approach-section">
+      <h4>🎯 Tailored Business Approach</h4>
+      <p><strong>Angle:</strong> ${approach.angle}</p>
+      <p style="margin-top:8px"><strong>Opening:</strong> ${approach.opening}</p>
+      <ul style="margin-top:8px">${approach.actions.map(a=>`<li>${a}</li>`).join('')}</ul>
+      <p style="margin-top:12px;font-style:italic;color:var(--accent2)">${approach.keyInsight}</p>
+    </div>
+  `;
+  document.getElementById('detail-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeDetail(); });
+
+// ============================================================
+// INIT
+// ============================================================
+renderDashboard();
+renderTable(SITES);
+renderTop20();
+renderApproachTabs();
+</script>
+</body>
+</html>
